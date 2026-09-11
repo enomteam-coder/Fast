@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>MOTION STUDIO</title>
+<style>
+html, body {
+  margin: 0; padding: 0; width: 100%; height: 100%;
+  background: #0c0c0c; overflow: hidden; touch-action: none;
+  font-family: -apple-system, "Segoe UI", Tahoma, sans-serif;
+  -webkit-user-select: none; user-select: none; color: #111;
+}
+#video { position: absolute; width: 1px; height: 1px; opacity: 0; }
+#canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background:#fff; touch-action:none; }
+
+.screen {
+  position: absolute; inset: 0; z-index: 3;
+  display: flex; flex-direction: column;
+}
+.hidden { display: none !important; }
+
+/* ---- Menu ---- */
+#menu {
+  background: #fff; align-items: center; justify-content: center; gap: 16px; padding: 24px; box-sizing: border-box;
+}
+#menu h1 { font-size: 7vw; margin: 0 0 6px 0; letter-spacing: 1px; }
+#menu p.sub { color:#666; font-size: 3.6vw; margin: 0 0 18px 0; text-align:center; max-width: 85vw; }
+.menuBtn {
+  width: 82vw; max-width: 420px; padding: 18px 20px; border-radius: 16px; border: 3px solid #111;
+  background: #fff; font-size: 4.6vw; font-weight: bold; text-align: right; display:flex; align-items:center; gap:14px;
+  -webkit-tap-highlight-color: transparent;
+}
+.menuBtn:active { background:#111; color:#fff; }
+.menuBtn .icon { font-size: 6vw; }
+#savedInfo { font-size: 3.2vw; color:#888; margin-top: 8px; text-align:center; }
+
+/* ---- Shared top bar ---- */
+.topbar {
+  position:absolute; top:0; left:0; right:0; z-index:6;
+  display:flex; justify-content:space-between; align-items:center;
+  padding: 10px 14px; box-sizing:border-box; pointer-events:none;
+}
+.topbar button { pointer-events:all; font-size: 3.6vw; padding: 8px 16px; border-radius: 10px;
+  border: 2px solid #111; background: rgba(255,255,255,0.9); font-weight:bold; }
+
+/* ---- Record screen ---- */
+#recordScreen .bottomBar {
+  position:absolute; bottom: 24px; left:0; right:0; z-index:6;
+  display:flex; justify-content:center; gap: 14px; pointer-events:none;
+}
+#recordScreen .bottomBar button { pointer-events:all; }
+.bigActionBtn {
+  padding: 16px 34px; border-radius: 999px; border: 3px solid #111; background:#fff;
+  font-size: 4.4vw; font-weight:bold;
+}
+.bigActionBtn.rec { border-color:#c00000; color:#c00000; }
+.bigActionBtn.stop { background:#c00000; color:#fff; border-color:#c00000; }
+#countdownOverlay {
+  position:absolute; inset:0; z-index:8; display:flex; align-items:center; justify-content:center;
+  background: rgba(255,255,255,0.75);
+}
+#countdownOverlay span { font-size: 28vw; font-weight:bold; color:#c00000; }
+#recStatus {
+  position:absolute; top: 60px; left:0; right:0; z-index:6; text-align:center; pointer-events:none;
+  font-size: 4vw; font-weight:bold; color:#c00000;
+}
+#hint2 { position:absolute; bottom: 100px; left:0; right:0; text-align:center; color:#333; font-size:3.2vw; z-index:6; pointer-events:none; }
+
+/* ---- Trim screen ---- */
+#trimScreen { background:#fff; }
+#trimCanvasWrap { flex:1; position:relative; }
+#trimCanvas { position:absolute; inset:0; width:100%; height:100%; }
+#trimControls { padding: 10px 16px 22px; box-sizing:border-box; background:#fff; border-top: 2px solid #111; }
+.rangeRow { display:flex; align-items:center; gap:10px; margin: 8px 0; }
+.rangeRow label { font-size: 3.2vw; width: 60px; flex-shrink:0; }
+.rangeRow input[type=range] { flex:1; }
+#trimBtns { display:flex; gap:10px; margin-top:10px; }
+#trimBtns button { flex:1; padding: 12px; border-radius: 12px; border:2px solid #111; background:#fff; font-size:3.6vw; font-weight:bold; }
+#trimBtns button.primary { background:#111; color:#fff; }
+
+/* ---- Draw screen ---- */
+#drawScreen { background:#fff; }
+#drawCanvasWrap { flex:1; position:relative; }
+#drawCanvas { position:absolute; inset:0; width:100%; height:100%; }
+#drawToolbar { padding: 10px 12px 18px; box-sizing:border-box; background:#fff; border-top:2px solid #111; }
+#palette { display:flex; gap:8px; overflow-x:auto; padding-bottom: 8px; }
+.swatch { width: 9vw; height: 9vw; min-width:34px; min-height:34px; border-radius:50%; border:3px solid #ccc; flex-shrink:0; }
+.swatch.active { border-color:#111; }
+#brushRow { display:flex; align-items:center; gap:10px; margin: 6px 0; }
+#brushRow label { font-size: 3.2vw; width: 60px; }
+#drawBtns { display:flex; gap:10px; margin-top:8px; }
+#drawBtns button { flex:1; padding: 12px; border-radius:12px; border:2px solid #111; background:#fff; font-size:3.6vw; font-weight:bold; }
+#drawBtns button.primary { background:#111; color:#fff; }
+
+/* ---- Rig screen ---- */
+#rigScreen { background:#fff; }
+#rigCanvasWrap { flex:1; position:relative; }
+#rigCanvas { position:absolute; inset:0; width:100%; height:100%; }
+#rigPrompt {
+  position:absolute; bottom: 0; left:0; right:0; z-index:6; background:#111; color:#fff;
+  padding: 16px 18px 26px; box-sizing:border-box; text-align:center;
+}
+#rigPrompt .jointName { font-size: 5.2vw; font-weight:bold; color:#ff5b5b; }
+#rigPrompt .jointHint { font-size: 3.2vw; color:#ccc; margin-top:4px; }
+#rigBtns { display:flex; gap:10px; margin-top:12px; }
+#rigBtns button { flex:1; padding:10px; border-radius:10px; border:2px solid #fff; background:#111; color:#fff; font-size:3.4vw; font-weight:bold; }
+
+/* ---- Library screen ---- */
+#libraryScreen { background:#f4f4f4; }
+#libraryBody { flex:1; overflow-y:auto; padding: 70px 14px 24px; box-sizing:border-box; -webkit-overflow-scrolling:touch; }
+.libSection h2 { font-size: 4.2vw; margin: 10px 0 8px; }
+.libList { display:flex; flex-direction:column; gap:10px; }
+.libEmpty { color:#999; font-size:3.4vw; text-align:center; margin: 6px 0 18px; }
+.libRow {
+  display:flex; align-items:center; gap:12px; background:#fff; border:2px solid #111;
+  border-radius:14px; padding:10px 12px; box-sizing:border-box;
+}
+.libRow .thumb {
+  width: 12vw; height: 12vw; min-width:48px; min-height:48px; border-radius:10px; border:2px solid #111;
+  background:#fff center/contain no-repeat; flex-shrink:0;
+}
+.libRow .thumb.recIcon { display:flex; align-items:center; justify-content:center; font-size:6vw; background:#fff; }
+.libRow .info { flex:1; min-width:0; }
+.libRow .info .rowName { font-size:3.8vw; font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.libRow .info .rowSub { font-size:3vw; color:#777; margin-top:2px; }
+.libRow .delBtn {
+  flex-shrink:0; width: 10vw; height:10vw; min-width:38px; min-height:38px; border-radius:10px;
+  border:2px solid #c00000; background:#fff; color:#c00000; font-size:4.2vw; display:flex; align-items:center; justify-content:center;
+}
+.libRow .expBtn {
+  flex-shrink:0; width: 10vw; height:10vw; min-width:38px; min-height:38px; border-radius:10px;
+  border:2px solid #111; background:#fff; color:#111; font-size:4.2vw; display:flex; align-items:center; justify-content:center;
+}
+
+/* ---- Player screen ---- */
+#playerScreen { background:#fff; }
+.playerTitle { pointer-events:none; font-weight:bold; font-size:3.8vw; background:rgba(255,255,255,0.9); padding:8px 14px; border-radius:10px; border:2px solid #111; }
+#playerCanvasWrap { flex:1; position:relative; }
+#playerCanvas { position:absolute; inset:0; width:100%; height:100%; }
+#playerBottom { background:#fff; border-top:2px solid #111; padding: 10px 14px 20px; box-sizing:border-box; }
+#animChipsRow { display:flex; align-items:center; gap:8px; overflow-x:auto; padding-bottom:10px; }
+#animChips { display:flex; gap:8px; flex:1; overflow-x:auto; }
+.animChip {
+  flex-shrink:0; display:flex; align-items:center; gap:6px; padding: 9px 14px; border-radius:999px;
+  border:2px solid #111; background:#fff; font-size:3.4vw; font-weight:bold; white-space:nowrap;
+}
+.animChip.active { background:#111; color:#fff; }
+.animChip .chipX { font-size:3vw; opacity:0.6; padding-inline-start:4px; }
+#btnAddAnim { flex-shrink:0; padding:9px 14px; border-radius:999px; border:2px dashed #111; background:#fff; font-size:3.4vw; font-weight:bold; }
+#playerControls { display:flex; justify-content:center; }
+#animPickerOverlay {
+  position:absolute; inset:0; z-index:9; background:rgba(0,0,0,0.45);
+  display:flex; align-items:flex-end;
+}
+#animPickerSheet {
+  background:#fff; width:100%; border-radius: 18px 18px 0 0; padding: 18px 16px 24px; box-sizing:border-box;
+  max-height: 70vh; overflow-y:auto;
+}
+#animPickerSheet h3 { margin:0 0 12px; font-size:4vw; text-align:center; }
+#animPickerList { display:flex; flex-direction:column; gap:10px; margin-bottom: 14px; }
+.pickerRow { padding:14px; border-radius:12px; border:2px solid #111; background:#fff; font-size:3.6vw; font-weight:bold; text-align:right; }
+#btnClosePicker { width:100%; padding:12px; border-radius:12px; border:2px solid #111; background:#111; color:#fff; font-size:3.6vw; font-weight:bold; }
+</style>
+</head>
+<body>
+
+<video id="video" playsinline autoplay muted></video>
+
+<div id="loadingOverlay" style="position:fixed;inset:0;background:rgba(255,255,255,.97);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:24px;">
+  <div style="width:44px;height:44px;border:4px solid #ddd;border-top-color:#111;border-radius:50%;animation:spin 0.9s linear infinite;"></div>
+  <p style="font-size:4vw;max-width:80vw;">در حال آماده‌سازی...</p>
+  <button id="btnRetryInit" class="hidden" style="padding:12px 20px;border-radius:12px;border:2px solid #111;background:#111;color:#fff;font-size:3.6vw;font-weight:bold;">تلاش دوباره</button>
+</div>
+<style>@keyframes spin{to{transform:rotate(360deg);}}</style>
+
+<!-- MENU -->
+<div id="menu" class="screen">
+  <h1>MOTION STUDIO</h1>
+  <p class="sub">حرکت رو با دوربین ضبط کن، یا کاراکتر خودت رو بکش و مفصل‌هاشو مشخص کن.</p>
+  <button class="menuBtn" id="btnGoRecord"><span class="icon">🎥</span> ضبط حرکت جدید</button>
+  <button class="menuBtn" id="btnGoDraw"><span class="icon">🎨</span> طراحی کاراکتر و مفصل‌بندی</button>
+  <button class="menuBtn" id="btnGoLibrary"><span class="icon">🗂️</span> مدیریت و اجرای انیمیشن</button>
+  <p id="savedInfo"></p>
+</div>
+
+<!-- RECORD -->
+<div id="recordScreen" class="screen hidden">
+  <canvas id="canvas"></canvas>
+  <div class="topbar">
+    <button id="btnBackFromRecord">‹ منو</button>
+  </div>
+  <div id="recStatus" class="hidden">⏺ در حال ضبط... <span id="recTime">0.0s</span></div>
+  <div id="hint2">کل بدنت رو جلوی دوربین بگیر، بعد شروع رو بزن</div>
+  <div class="bottomBar">
+    <button class="bigActionBtn rec" id="btnStartRecord">شروع</button>
+    <button class="bigActionBtn stop hidden" id="btnStopRecord">توقف</button>
+  </div>
+  <div id="countdownOverlay" class="hidden"><span id="countdownNum">3</span></div>
+</div>
+
+<!-- TRIM -->
+<div id="trimScreen" class="screen hidden">
+  <div class="topbar">
+    <button id="btnBackFromTrim">‹ منو</button>
+    <button id="btnPlayPreview">▶ پخش</button>
+  </div>
+  <div id="trimCanvasWrap"><canvas id="trimCanvas"></canvas></div>
+  <div id="trimControls">
+    <div class="rangeRow">
+      <label>شروع</label>
+      <input type="range" id="trimStart" min="0" max="1" value="0">
+    </div>
+    <div class="rangeRow">
+      <label>پایان</label>
+      <input type="range" id="trimEnd" min="0" max="1" value="1">
+    </div>
+    <div class="rangeRow">
+      <label>پیش‌نمایش</label>
+      <input type="range" id="trimScrub" min="0" max="1" value="0">
+    </div>
+    <div id="trimBtns">
+      <button id="btnDiscardTrim">حذف و دوباره ضبط</button>
+      <button class="primary" id="btnSaveTrim">ذخیره برش</button>
+    </div>
+  </div>
+</div>
+
+<!-- DRAW -->
+<div id="drawScreen" class="screen hidden">
+  <div class="topbar">
+    <button id="btnBackFromDraw">‹ منو</button>
+  </div>
+  <div id="drawCanvasWrap"><canvas id="drawCanvas"></canvas></div>
+  <div id="drawToolbar">
+    <div id="palette"></div>
+    <div id="brushRow">
+      <label>ضخامت</label>
+      <input type="range" id="brushSize" min="2" max="40" value="8">
+    </div>
+    <div id="drawBtns">
+      <button id="btnClearDraw">پاک کردن همه</button>
+      <button id="btnEraser">پاک‌کن</button>
+      <button class="primary" id="btnGoRig">بعدی: مشخص کردن مفصل‌ها</button>
+    </div>
+  </div>
+</div>
+
+<!-- RIG -->
+<div id="rigScreen" class="screen hidden">
+  <div class="topbar">
+    <button id="btnBackFromRig">‹ منو</button>
+  </div>
+  <div id="rigCanvasWrap"><canvas id="rigCanvas"></canvas></div>
+  <div id="rigPrompt">
+    <div class="jointHint">روی محل این مفصل روی طرحت ضربه بزن:</div>
+    <div class="jointName" id="rigJointName">سر</div>
+    <div id="rigBtns">
+      <button id="btnUndoJoint">مرحله قبل</button>
+      <button id="btnSaveRig" style="display:none;">ذخیره اسکلت‌بندی</button>
+    </div>
+  </div>
+</div>
+
+<!-- LIBRARY -->
+<div id="libraryScreen" class="screen hidden">
+  <div class="topbar">
+    <button id="btnBackFromLibrary">‹ منو</button>
+  </div>
+  <div id="libraryBody">
+    <div class="libSection">
+      <h2>کاراکترها</h2>
+      <div id="charList" class="libList"></div>
+      <p class="libEmpty" id="charListEmpty">هنوز کاراکتری نساختی.</p>
+    </div>
+    <div class="libSection">
+      <h2>حرکت‌های ضبط‌شده</h2>
+      <div id="recList" class="libList"></div>
+      <p class="libEmpty" id="recListEmpty">هنوز حرکتی ضبط نکردی.</p>
+    </div>
+  </div>
+</div>
+
+<!-- PLAYER -->
+<div id="playerScreen" class="screen hidden">
+  <div class="topbar">
+    <button id="btnBackFromPlayer">‹ کتابخانه</button>
+    <div id="playerCharName" class="playerTitle"></div>
+  </div>
+  <div id="playerCanvasWrap"><canvas id="playerCanvas"></canvas></div>
+  <div id="playerBottom">
+    <div id="animChipsRow">
+      <div id="animChips"></div>
+      <button id="btnAddAnim">＋ افزودن انیمیشن</button>
+    </div>
+    <div id="playerControls">
+      <button class="bigActionBtn rec" id="btnPlayAnim" disabled>شروع</button>
+      <button class="bigActionBtn stop hidden" id="btnStopAnim">توقف</button>
+    </div>
+  </div>
+  <div id="animPickerOverlay" class="hidden">
+    <div id="animPickerSheet">
+      <h3>یه حرکت رو انتخاب کن</h3>
+      <div id="animPickerList"></div>
+      <button id="btnClosePicker">بستن</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { PoseLandmarker, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/+esm";
+
+const $ = id => document.getElementById(id);
+function showScreen(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.add("hidden"));
+  $(id).classList.remove("hidden");
+}
+
+const BODY_CONNECTIONS = [
+  [11,12],[11,13],[13,15],[12,14],[14,16],
+  [11,23],[12,24],[23,24],
+  [23,25],[25,27],[27,29],[29,31],
+  [24,26],[26,28],[28,30],[30,32]
+];
+const VISIBILITY = 0.30;
+const POSE_JOINT_NAMES = {
+  0:"nose", 11:"left_shoulder", 12:"right_shoulder", 13:"left_elbow", 14:"right_elbow",
+  15:"left_wrist", 16:"right_wrist", 23:"left_hip", 24:"right_hip", 25:"left_knee",
+  26:"right_knee", 27:"left_ankle", 28:"right_ankle", 29:"left_heel", 30:"right_heel",
+  31:"left_foot_index", 32:"right_foot_index"
+};
+
+function downloadJSON(filename, data) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+let savedRecordings = [];
+let savedCharacters = [];
+
+function updateSavedInfo() {
+  const parts = [];
+  if (savedRecordings.length) parts.push(`${savedRecordings.length} حرکت ضبط‌شده`);
+  if (savedCharacters.length) parts.push(`${savedCharacters.length} کاراکتر ساخته‌شده`);
+  $("savedInfo").textContent = parts.length
+    ? parts.join(" · ") + " (فقط تا وقتی این صفحه بازه ذخیره می‌مونه)"
+    : "";
+}
+
+// ===================== CAMERA + POSE =====================
+const video = $("video");
+let poseLandmarker = null;
+let poseReady = false;
+
+async function initCamera() {
+  const stream = await navigator.mediaDevices.getUserMedia({
+    video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } },
+    audio: false
+  });
+  video.srcObject = stream;
+  await new Promise(res => { video.onloadedmetadata = () => { video.play(); res(); }; });
+}
+async function initPose() {
+  const filesetResolver = await FilesetResolver.forVisionTasks(
+    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm"
+  );
+  poseLandmarker = await PoseLandmarker.createFromOptions(filesetResolver, {
+    baseOptions: {
+      modelAssetPath: "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",
+      delegate: "CPU"
+    },
+    runningMode: "VIDEO",
+    numPoses: 1
+  });
+  poseReady = true;
+}
+
+function setLoadingUI(state, msg) {
+  const overlay = $("loadingOverlay");
+  const btn = $("btnStartRecord");
+  if (!overlay) return;
+  if (state === "loading") {
+    overlay.classList.remove("hidden");
+    overlay.querySelector("p").textContent = msg || "در حال آماده‌سازی تشخیص بدن...";
+    overlay.querySelector("button").classList.add("hidden");
+    if (btn) btn.disabled = true;
+  } else if (state === "ready") {
+    overlay.classList.add("hidden");
+    if (btn) btn.disabled = false;
+  } else if (state === "error") {
+    overlay.classList.remove("hidden");
+    overlay.querySelector("p").textContent = msg || "مشکلی پیش اومد. اتصال اینترنتت رو چک کن.";
+    overlay.querySelector("button").classList.remove("hidden");
+    if (btn) btn.disabled = true;
+  }
+}
+
+let poseInitStarted = false;
+async function startInit() {
+  if (poseInitStarted) return;
+  poseInitStarted = true;
+  setLoadingUI("loading", "در حال آماده‌سازی دوربین و تشخیص بدن...");
+  const slowTimer = setTimeout(() => {
+    if (!poseReady) setLoadingUI("loading", "داره طول می‌کشه... اینترنتت رو چک کن، دفعه بعد سریع‌تر می‌شه.");
+  }, 8000);
+  try {
+    await Promise.all([initCamera(), initPose()]);
+    clearTimeout(slowTimer);
+    setLoadingUI("ready");
+  } catch (err) {
+    clearTimeout(slowTimer);
+    console.error(err);
+    setLoadingUI("error", "تشخیص بدن لود نشد. اتصال اینترنتت رو چک کن و دوباره امتحان کن.");
+  }
+}
+startInit();
+$("btnRetryInit") && ($("btnRetryInit").onclick = () => { poseInitStarted = false; startInit(); });
+
+// ===================== RECORD =====================
+const canvas = $("canvas");
+const ctx = canvas.getContext("2d");
+let CW = 0, CH = 0;
+function resizeRecordCanvas() {
+  CW = canvas.width = window.innerWidth * devicePixelRatio;
+  CH = canvas.height = window.innerHeight * devicePixelRatio;
+  canvas.style.width = window.innerWidth + "px";
+  canvas.style.height = window.innerHeight + "px";
+}
+window.addEventListener("resize", resizeRecordCanvas);
+resizeRecordCanvas();
+
+let isRecording = false;
+let recordStartTime = 0;
+let currentFrames = [];
+let recordLoopActive = false;
+
+function getMirroredPoints(landmarks) {
+  const out = {};
+  if (!landmarks) return out;
+  for (let i = 0; i < landmarks.length; i++) {
+    const lm = landmarks[i];
+    if ((lm.visibility ?? 1) >= VISIBILITY) {
+      out[i] = [1 - lm.x, lm.y];
+    }
+  }
+  return out;
+}
+
+// دیتای خام لندمارک‌ها به مبدأ وسط لگن منتقل و با طول تنه (شانه تا لگن) نرمال می‌شه.
+// نتیجه: جلو/عقب رفتن (فاصله از دوربین) و بالا/پایین رفتن (جابجایی توی قاب) روی دیتای
+// ذخیره‌شده تاثیری نداره — فقط حرکت نسبی مفصل‌ها ثبت می‌شه.
+const LHIP = 23, RHIP = 24, LSH = 11, RSH = 12;
+function normalizePoints(rawPts) {
+  if (!rawPts[LHIP] || !rawPts[RHIP] || !rawPts[LSH] || !rawPts[RSH]) return null;
+  const hipCx = (rawPts[LHIP][0] + rawPts[RHIP][0]) / 2;
+  const hipCy = (rawPts[LHIP][1] + rawPts[RHIP][1]) / 2;
+  const shCx = (rawPts[LSH][0] + rawPts[RSH][0]) / 2;
+  const shCy = (rawPts[LSH][1] + rawPts[RSH][1]) / 2;
+  const scale = Math.hypot(shCx - hipCx, shCy - hipCy);
+  if (!scale || scale < 0.02) return null;
+  const out = {};
+  for (const k in rawPts) {
+    out[k] = [(rawPts[k][0] - hipCx) / scale, (rawPts[k][1] - hipCy) / scale];
+  }
+  return out;
+}
+
+// دیتای نرمال‌شده (متمرکز حول لگن) رو برای نمایش، به مختصات صفحه تبدیل می‌کنه.
+function mapPtToScreen(pt, w, h) {
+  const s = Math.min(w, h) * 0.30;
+  return [w * 0.5 + pt[0] * s, h * 0.5 + pt[1] * s];
+}
+
+function drawSkeletonNormalized(pts, w, h) {
+  ctx.strokeStyle = "#111";
+  ctx.lineWidth = 6 * devicePixelRatio;
+  ctx.lineCap = "round";
+  for (const [a,b] of BODY_CONNECTIONS) {
+    if (pts[a] && pts[b]) {
+      const [ax, ay] = mapPtToScreen(pts[a], w, h);
+      const [bx, by] = mapPtToScreen(pts[b], w, h);
+      ctx.beginPath();
+      ctx.moveTo(ax, ay);
+      ctx.lineTo(bx, by);
+      ctx.stroke();
+    }
+  }
+  ctx.fillStyle = "#e00000";
+  for (const k in pts) {
+    const [px, py] = mapPtToScreen(pts[k], w, h);
+    ctx.beginPath();
+    ctx.arc(px, py, 6*devicePixelRatio, 0, Math.PI*2);
+    ctx.fill();
+  }
+}
+
+function recordLoop() {
+  if (!recordLoopActive) return;
+  requestAnimationFrame(recordLoop);
+  if (!poseReady || video.readyState < 2) return;
+
+  const now = performance.now();
+  const result = poseLandmarker.detectForVideo(video, now);
+  const landmarks = result.landmarks && result.landmarks[0];
+  const rawPts = getMirroredPoints(landmarks);
+  const pts = normalizePoints(rawPts);
+
+  ctx.fillStyle = "#fff";
+  ctx.fillRect(0,0,CW,CH);
+  if (pts) {
+    drawSkeletonNormalized(pts, CW, CH);
+  } else {
+    ctx.fillStyle = "#900";
+    ctx.font = `${18*devicePixelRatio}px sans-serif`;
+    ctx.fillText("بدن به‌طور کامل شناسایی نشد (شانه و لگن باید دیده بشن)", 20, 40*devicePixelRatio);
+  }
+
+  if (isRecording && pts) {
+    currentFrames.push({ t: now - recordStartTime, pts });
+    $("recTime").textContent = ((now - recordStartTime)/1000).toFixed(1) + "s";
+  }
+}
+
+$("btnGoRecord").onclick = () => {
+  showScreen("recordScreen");
+  recordLoopActive = true;
+  recordLoop();
+};
+$("btnBackFromRecord").onclick = () => {
+  recordLoopActive = false;
+  showScreen("menu");
+};
+
+$("btnStartRecord").onclick = () => {
+  $("btnStartRecord").classList.add("hidden");
+  const overlay = $("countdownOverlay");
+  const numEl = $("countdownNum");
+  overlay.classList.remove("hidden");
+  let n = 3;
+  numEl.textContent = n;
+  const iv = setInterval(() => {
+    n--;
+    if (n > 0) {
+      numEl.textContent = n;
+    } else {
+      clearInterval(iv);
+      overlay.classList.add("hidden");
+      currentFrames = [];
+      isRecording = true;
+      recordStartTime = performance.now();
+      $("recStatus").classList.remove("hidden");
+      $("btnStopRecord").classList.remove("hidden");
+    }
+  }, 1000);
+};
+
+$("btnStopRecord").onclick = () => {
+  isRecording = false;
+  $("recStatus").classList.add("hidden");
+  $("btnStopRecord").classList.add("hidden");
+  $("btnStartRecord").classList.remove("hidden");
+  recordLoopActive = false;
+  if (currentFrames.length < 2) {
+    alert("چیزی ضبط نشد، دوباره امتحان کن.");
+    return;
+  }
+  openTrimScreen(currentFrames);
+};
+
+// ===================== TRIM =====================
+const trimCanvas = $("trimCanvas");
+const trimCtx = trimCanvas.getContext("2d");
+let TW=0, TH=0;
+function resizeTrimCanvas() {
+  TW = trimCanvas.width = trimCanvas.clientWidth * devicePixelRatio;
+  TH = trimCanvas.height = trimCanvas.clientHeight * devicePixelRatio;
+}
+let trimFrames = [];
+let isPlayingPreview = false;
+
+function openTrimScreen(frames) {
+  trimFrames = frames;
+  showScreen("trimScreen");
+  requestAnimationFrame(() => {
+    resizeTrimCanvas();
+    $("trimStart").max = frames.length - 1;
+    $("trimEnd").max = frames.length - 1;
+    $("trimScrub").max = frames.length - 1;
+    $("trimStart").value = 0;
+    $("trimEnd").value = frames.length - 1;
+    $("trimScrub").value = 0;
+    drawTrimFrame(0);
+  });
+}
+function drawTrimFrame(idx) {
+  const f = trimFrames[idx];
+  if (!f) return;
+  trimCtx.fillStyle = "#fff";
+  trimCtx.fillRect(0,0,TW,TH);
+  trimCtx.strokeStyle = "#111";
+  trimCtx.lineWidth = 6*devicePixelRatio;
+  trimCtx.lineCap="round";
+  for (const [a,b] of BODY_CONNECTIONS) {
+    if (f.pts[a] && f.pts[b]) {
+      const [ax, ay] = mapPtToScreen(f.pts[a], TW, TH);
+      const [bx, by] = mapPtToScreen(f.pts[b], TW, TH);
+      trimCtx.beginPath();
+      trimCtx.moveTo(ax, ay);
+      trimCtx.lineTo(bx, by);
+      trimCtx.stroke();
+    }
+  }
+  trimCtx.fillStyle = "#e00000";
+  for (const k in f.pts) {
+    const [px, py] = mapPtToScreen(f.pts[k], TW, TH);
+    trimCtx.beginPath();
+    trimCtx.arc(px, py, 6*devicePixelRatio, 0, Math.PI*2);
+    trimCtx.fill();
+  }
+}
+
+$("trimStart").oninput = () => {
+  if (+$("trimStart").value > +$("trimEnd").value) $("trimStart").value = $("trimEnd").value;
+  $("trimScrub").min = $("trimStart").value;
+  drawTrimFrame(+$("trimScrub").value);
+};
+$("trimEnd").oninput = () => {
+  if (+$("trimEnd").value < +$("trimStart").value) $("trimEnd").value = $("trimStart").value;
+  $("trimScrub").max = $("trimEnd").value;
+  drawTrimFrame(+$("trimScrub").value);
+};
+$("trimScrub").oninput = () => drawTrimFrame(+$("trimScrub").value);
+
+$("btnPlayPreview").onclick = () => {
+  if (isPlayingPreview) {
+    isPlayingPreview = false;
+    $("btnPlayPreview").textContent = "▶ پخش";
+    return;
+  }
+  isPlayingPreview = true;
+  $("btnPlayPreview").textContent = "⏸ توقف";
+  const start = +$("trimStart").value, end = +$("trimEnd").value;
+  let i = start;
+  function step() {
+    if (!isPlayingPreview) return;
+    $("trimScrub").value = i;
+    drawTrimFrame(i);
+    i++;
+    if (i > end) i = start;
+    setTimeout(() => requestAnimationFrame(step), 33);
+  }
+  step();
+};
+
+$("btnBackFromTrim").onclick = () => { isPlayingPreview = false; showScreen("menu"); };
+$("btnDiscardTrim").onclick = () => {
+  isPlayingPreview = false;
+  showScreen("recordScreen");
+  recordLoopActive = true;
+  recordLoop();
+};
+$("btnSaveTrim").onclick = () => {
+  isPlayingPreview = false;
+  const start = +$("trimStart").value, end = +$("trimEnd").value;
+  const trimmed = trimFrames.slice(start, end+1);
+  const name = prompt("اسم این حرکت رو بنویس", "حرکت " + (savedRecordings.length+1));
+  if (name === null) return;
+  savedRecordings.push({ name: name || ("حرکت " + (savedRecordings.length+1)), frames: trimmed });
+  updateSavedInfo();
+  showScreen("menu");
+};
+
+// ===================== DRAW =====================
+const drawCanvas = $("drawCanvas");
+const drawCtx = drawCanvas.getContext("2d");
+let DW=0, DH=0;
+function resizeDrawCanvas() {
+  DW = drawCanvas.width = drawCanvas.clientWidth * devicePixelRatio;
+  DH = drawCanvas.height = drawCanvas.clientHeight * devicePixelRatio;
+  drawCtx.fillStyle = "#fff";
+  drawCtx.fillRect(0,0,DW,DH);
+}
+const PALETTE = ["#111111","#e00000","#ff8a00","#ffd400","#2ecc40","#0074d9","#7b2fbe","#8b5a2b","#f5c99b","#ffffff"];
+let currentColor = "#111111";
+let currentSize = 8;
+let eraserMode = false;
+let drawing = false;
+let lastPt = null;
+
+function buildPalette() {
+  const wrap = $("palette");
+  wrap.innerHTML = "";
+  PALETTE.forEach(c => {
+    const sw = document.createElement("div");
+    sw.className = "swatch" + (c === currentColor && !eraserMode ? " active" : "");
+    sw.style.background = c;
+    if (c === "#ffffff") sw.style.border = "3px solid #999";
+    sw.onclick = () => {
+      currentColor = c;
+      eraserMode = false;
+      buildPalette();
+    };
+    wrap.appendChild(sw);
+  });
+}
+buildPalette();
+
+function drawPointerPos(e) {
+  const rect = drawCanvas.getBoundingClientRect();
+  const cx = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+  const cy = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+  return [cx * devicePixelRatio, cy * devicePixelRatio];
+}
+function startDraw(e) {
+  e.preventDefault();
+  drawing = true;
+  lastPt = drawPointerPos(e);
+}
+function moveDraw(e) {
+  if (!drawing) return;
+  e.preventDefault();
+  const p = drawPointerPos(e);
+  drawCtx.strokeStyle = eraserMode ? "#ffffff" : currentColor;
+  drawCtx.lineWidth = currentSize * devicePixelRatio;
+  drawCtx.lineCap = "round";
+  drawCtx.lineJoin = "round";
+  drawCtx.beginPath();
+  drawCtx.moveTo(lastPt[0], lastPt[1]);
+  drawCtx.lineTo(p[0], p[1]);
+  drawCtx.stroke();
+  lastPt = p;
+}
+function endDraw() { drawing = false; lastPt = null; }
+
+drawCanvas.addEventListener("pointerdown", startDraw);
+drawCanvas.addEventListener("pointermove", moveDraw);
+window.addEventListener("pointerup", endDraw);
+
+$("brushSize").oninput = () => currentSize = +$("brushSize").value;
+$("btnEraser").onclick = () => { eraserMode = true; buildPalette(); };
+$("btnClearDraw").onclick = () => {
+  if (confirm("همه‌ی طرح پاک بشه؟")) {
+    drawCtx.fillStyle = "#fff";
+    drawCtx.fillRect(0,0,DW,DH);
+  }
+};
+
+$("btnGoDraw").onclick = () => {
+  showScreen("drawScreen");
+  requestAnimationFrame(resizeDrawCanvas);
+};
+$("btnBackFromDraw").onclick = () => showScreen("menu");
+
+// ===================== RIG =====================
+const JOINTS = [
+  { id: 0,  name: "سر" },
+  { id: 11, name: "شانه چپ" },
+  { id: 12, name: "شانه راست" },
+  { id: 13, name: "آرنج چپ" },
+  { id: 14, name: "آرنج راست" },
+  { id: 15, name: "مچ دست چپ" },
+  { id: 16, name: "مچ دست راست" },
+  { id: 23, name: "لگن چپ" },
+  { id: 24, name: "لگن راست" },
+  { id: 25, name: "زانو چپ" },
+  { id: 26, name: "زانو راست" },
+  { id: 27, name: "مچ پا چپ" },
+  { id: 28, name: "مچ پا راست" }
+];
+const rigCanvas = $("rigCanvas");
+const rigCtx = rigCanvas.getContext("2d");
+let RW=0, RH=0;
+let characterImage = null;
+let placedJoints = [];
+let rigIndex = 0;
+
+$("btnGoRig").onclick = () => {
+  characterImage = new Image();
+  characterImage.onload = () => {
+    showScreen("rigScreen");
+    requestAnimationFrame(() => {
+      RW = rigCanvas.width = rigCanvas.clientWidth * devicePixelRatio;
+      RH = rigCanvas.height = rigCanvas.clientHeight * devicePixelRatio;
+      placedJoints = [];
+      rigIndex = 0;
+      updateRigPrompt();
+      redrawRig();
+    });
+  };
+  characterImage.src = drawCanvas.toDataURL("image/png");
+};
+
+function updateRigPrompt() {
+  if (rigIndex >= JOINTS.length) {
+    $("rigJointName").textContent = "تموم شد! 🎉";
+    $("btnSaveRig").style.display = "block";
+  } else {
+    $("rigJointName").textContent = JOINTS[rigIndex].name;
+    $("btnSaveRig").style.display = "none";
+  }
+}
+function redrawRig() {
+  rigCtx.fillStyle = "#fff";
+  rigCtx.fillRect(0,0,RW,RH);
+  if (characterImage) {
+    const scale = Math.min(RW/characterImage.width, RH/characterImage.height);
+    const iw = characterImage.width*scale, ih = characterImage.height*scale;
+    const ox = (RW-iw)/2, oy = (RH-ih)/2;
+    rigCtx.drawImage(characterImage, ox, oy, iw, ih);
+  }
+  rigCtx.fillStyle = "#e00000";
+  placedJoints.forEach((j, i) => {
+    rigCtx.beginPath();
+    rigCtx.arc(j.x*RW, j.y*RH, 10*devicePixelRatio, 0, Math.PI*2);
+    rigCtx.fill();
+    rigCtx.fillStyle = "#fff";
+    rigCtx.font = `bold ${12*devicePixelRatio}px sans-serif`;
+    rigCtx.fillText(String(i+1), j.x*RW-4*devicePixelRatio, j.y*RH+4*devicePixelRatio);
+    rigCtx.fillStyle = "#e00000";
+  });
+}
+rigCanvas.addEventListener("pointerdown", (e) => {
+  if (rigIndex >= JOINTS.length) return;
+  const rect = rigCanvas.getBoundingClientRect();
+  const x = (e.clientX - rect.left) / rect.width;
+  const y = (e.clientY - rect.top) / rect.height;
+  const joint = JOINTS[rigIndex];
+  placedJoints.push({ id: joint.id, name: joint.name, x, y });
+  rigIndex++;
+  updateRigPrompt();
+  redrawRig();
+});
+$("btnUndoJoint").onclick = () => {
+  if (placedJoints.length === 0) return;
+  placedJoints.pop();
+  rigIndex = Math.max(0, rigIndex-1);
+  updateRigPrompt();
+  redrawRig();
+};
+$("btnSaveRig").onclick = () => {
+  const name = prompt("اسم این کاراکتر رو بنویس", "کاراکتر " + (savedCharacters.length+1));
+  if (name === null) return;
+  savedCharacters.push({
+    name: name || ("کاراکتر " + (savedCharacters.length+1)),
+    image: characterImage.src,
+    joints: placedJoints,
+    animations: []
+  });
+  updateSavedInfo();
+  showScreen("menu");
+};
+$("btnBackFromRig").onclick = () => showScreen("menu");
+
+// ===================== LIBRARY =====================
+function renderLibrary() {
+  const charList = $("charList");
+  const recList = $("recList");
+  charList.innerHTML = "";
+  recList.innerHTML = "";
+
+  $("charListEmpty").classList.toggle("hidden", savedCharacters.length > 0);
+  $("recListEmpty").classList.toggle("hidden", savedRecordings.length > 0);
+
+  savedCharacters.forEach((ch, i) => {
+    if (!ch.animations) ch.animations = [];
+    const row = document.createElement("div");
+    row.className = "libRow";
+    row.innerHTML = `
+      <div class="thumb" style="background-image:url('${ch.image}')"></div>
+      <div class="info">
+        <div class="rowName"></div>
+        <div class="rowSub">${ch.animations.length} انیمیشن متصل</div>
+      </div>
+      <button class="expBtn" title="دانلود دیتای JSON">⭳</button>
+      <button class="delBtn">🗑</button>
+    `;
+    row.querySelector(".rowName").textContent = ch.name;
+    row.querySelector(".expBtn").onclick = (e) => {
+      e.stopPropagation();
+      downloadJSON(`${ch.name}.json`, {
+        name: ch.name,
+        image: ch.image,
+        joints: ch.joints,
+        jointNames: POSE_JOINT_NAMES,
+        coordinateSystem: "normalized: origin = hip midpoint, unit = shoulder-to-hip distance (invariant to camera distance and framing)",
+        animations: (ch.animations || []).map(a => ({ name: a.name, frameCount: a.frames.length, frames: a.frames }))
+      });
+    };
+    row.querySelector(".delBtn").onclick = (e) => {
+      e.stopPropagation();
+      if (confirm(`کاراکتر «${ch.name}» حذف بشه؟`)) {
+        savedCharacters.splice(i, 1);
+        updateSavedInfo();
+        renderLibrary();
+      }
+    };
+    row.onclick = () => openPlayer(ch);
+    charList.appendChild(row);
+  });
+
+  savedRecordings.forEach((rec, i) => {
+    const row = document.createElement("div");
+    row.className = "libRow";
+    row.innerHTML = `
+      <div class="thumb recIcon">🎬</div>
+      <div class="info">
+        <div class="rowName"></div>
+        <div class="rowSub">${rec.frames.length} فریم</div>
+      </div>
+      <button class="expBtn" title="دانلود دیتای JSON">⭳</button>
+      <button class="delBtn">🗑</button>
+    `;
+    row.querySelector(".rowName").textContent = rec.name;
+    row.querySelector(".expBtn").onclick = (e) => {
+      e.stopPropagation();
+      downloadJSON(`${rec.name}.json`, {
+        name: rec.name,
+        jointNames: POSE_JOINT_NAMES,
+        coordinateSystem: "normalized: origin = hip midpoint, unit = shoulder-to-hip distance (invariant to camera distance and framing)",
+        frameCount: rec.frames.length,
+        frames: rec.frames
+      });
+    };
+    row.querySelector(".delBtn").onclick = (e) => {
+      e.stopPropagation();
+      if (confirm(`حرکت «${rec.name}» حذف بشه؟`)) {
+        savedRecordings.splice(i, 1);
+        updateSavedInfo();
+        renderLibrary();
+      }
+    };
+    recList.appendChild(row);
+  });
+}
+$("btnGoLibrary").onclick = () => { showScreen("libraryScreen"); renderLibrary(); };
+$("btnBackFromLibrary").onclick = () => showScreen("menu");
+
+// ===================== PLAYER =====================
+const playerCanvas = $("playerCanvas");
+const playerCtx = playerCanvas.getContext("2d");
+let PW = 0, PH = 0;
+let playerCharacter = null;
+let playerImage = null;
+let selectedAnimIdx = -1;
+let animPlaying = false;
+let animFrameIdx = 0;
+let retargetFn = null;
+
+function resizePlayerCanvas() {
+  PW = playerCanvas.width = playerCanvas.clientWidth * devicePixelRatio;
+  PH = playerCanvas.height = playerCanvas.clientHeight * devicePixelRatio;
+}
+
+function openPlayer(character) {
+  playerCharacter = character;
+  if (!playerCharacter.animations) playerCharacter.animations = [];
+  animPlaying = false;
+  selectedAnimIdx = -1;
+  $("playerCharName").textContent = character.name;
+  playerImage = new Image();
+  playerImage.onload = () => {
+    showScreen("playerScreen");
+    requestAnimationFrame(() => {
+      resizePlayerCanvas();
+      renderAnimChips();
+      updatePlayBtnState();
+      drawPlayerFrame(null);
+    });
+  };
+  playerImage.src = character.image;
+}
+$("btnBackFromPlayer").onclick = () => {
+  animPlaying = false;
+  showScreen("libraryScreen");
+  renderLibrary();
+};
+
+function drawPlayerFrame(pts) {
+  playerCtx.fillStyle = "#fff";
+  playerCtx.fillRect(0, 0, PW, PH);
+  if (playerImage) {
+    const scale = Math.min(PW / playerImage.width, PH / playerImage.height);
+    const iw = playerImage.width * scale, ih = playerImage.height * scale;
+    const ox = (PW - iw) / 2, oy = (PH - ih) / 2;
+    playerCtx.drawImage(playerImage, ox, oy, iw, ih);
+  }
+  if (pts) {
+    playerCtx.strokeStyle = "#0074d9";
+    playerCtx.lineWidth = 6 * devicePixelRatio;
+    playerCtx.lineCap = "round";
+    for (const [a, b] of BODY_CONNECTIONS) {
+      if (pts[a] && pts[b]) {
+        playerCtx.beginPath();
+        playerCtx.moveTo(pts[a][0] * PW, pts[a][1] * PH);
+        playerCtx.lineTo(pts[b][0] * PW, pts[b][1] * PH);
+        playerCtx.stroke();
+      }
+    }
+    playerCtx.fillStyle = "#e00000";
+    for (const k in pts) {
+      playerCtx.beginPath();
+      playerCtx.arc(pts[k][0] * PW, pts[k][1] * PH, 6 * devicePixelRatio, 0, Math.PI * 2);
+      playerCtx.fill();
+    }
+  }
+}
+
+// مهم: از id استفاده می‌کنیم (نه name)
+function computeRetarget(character, frames) {
+  const rig = {};
+  (character.joints || []).forEach(j => { rig[j.id] = [j.x, j.y]; });
+
+  let ref = null;
+  for (const f of frames) {
+    const ids = Object.keys(f.pts).map(Number).filter(id => rig[id] !== undefined);
+    if (ids.length >= 4) { ref = f; break; }
+  }
+  if (!ref) return null;
+
+  const ids = Object.keys(ref.pts).map(Number).filter(id => rig[id] !== undefined);
+  let refMinX = Infinity, refMaxX = -Infinity, refMinY = Infinity, refMaxY = -Infinity;
+  let rigMinX = Infinity, rigMaxX = -Infinity, rigMinY = Infinity, rigMaxY = -Infinity;
+  ids.forEach(id => {
+    const [rx, ry] = ref.pts[id];
+    refMinX = Math.min(refMinX, rx); refMaxX = Math.max(refMaxX, rx);
+    refMinY = Math.min(refMinY, ry); refMaxY = Math.max(refMaxY, ry);
+    const [gx, gy] = rig[id];
+    rigMinX = Math.min(rigMinX, gx); rigMaxX = Math.max(rigMaxX, gx);
+    rigMinY = Math.min(rigMinY, gy); rigMaxY = Math.max(rigMaxY, gy);
+  });
+  const refW = Math.max(refMaxX - refMinX, 0.0001);
+  const refH = Math.max(refMaxY - refMinY, 0.0001);
+  const rigW = Math.max(rigMaxX - rigMinX, 0.0001);
+  const rigH = Math.max(rigMaxY - rigMinY, 0.0001);
+  const scale = Math.min(rigW / refW, rigH / refH) || 1;
+  const refCx = (refMinX + refMaxX) / 2, refCy = (refMinY + refMaxY) / 2;
+  const rigCx = (rigMinX + rigMaxX) / 2, rigCy = (rigMinY + rigMaxY) / 2;
+
+  return function (pts) {
+    const out = {};
+    for (const k in pts) {
+      const [x, y] = pts[k];
+      out[k] = [rigCx + (x - refCx) * scale, rigCy + (y - refCy) * scale];
+    }
+    return out;
+  };
+}
+
+function renderAnimChips() {
+  const wrap = $("animChips");
+  wrap.innerHTML = "";
+  (playerCharacter.animations || []).forEach((anim, i) => {
+    const chip = document.createElement("div");
+    chip.className = "animChip" + (i === selectedAnimIdx ? " active" : "");
+    chip.innerHTML = `<span class="chipLabel"></span><span class="chipX">✕</span>`;
+    chip.querySelector(".chipLabel").textContent = anim.name;
+    chip.querySelector(".chipLabel").onclick = () => selectAnim(i);
+    chip.querySelector(".chipX").onclick = (e) => {
+      e.stopPropagation();
+      if (confirm(`انیمیشن «${anim.name}» از این کاراکتر جدا بشه؟`)) {
+        if (selectedAnimIdx === i) stopAnim();
+        playerCharacter.animations.splice(i, 1);
+        if (selectedAnimIdx === i) selectedAnimIdx = -1;
+        else if (selectedAnimIdx > i) selectedAnimIdx--;
+        renderAnimChips();
+        updatePlayBtnState();
+      }
+    };
+    wrap.appendChild(chip);
+  });
+}
+
+function selectAnim(i) {
+  stopAnim();
+  selectedAnimIdx = i;
+  retargetFn = computeRetarget(playerCharacter, playerCharacter.animations[i].frames);
+  animFrameIdx = 0;
+  renderAnimChips();
+  updatePlayBtnState();
+  const frames = playerCharacter.animations[i].frames;
+  if (retargetFn && frames.length) drawPlayerFrame(retargetFn(frames[0].pts));
+  else drawPlayerFrame(null);
+}
+
+function updatePlayBtnState() {
+  $("btnPlayAnim").disabled = selectedAnimIdx === -1;
+}
+
+$("btnAddAnim").onclick = () => {
+  const list = $("animPickerList");
+  list.innerHTML = "";
+  if (!savedRecordings.length) {
+    list.innerHTML = `<p class="libEmpty">هنوز هیچ حرکتی ضبط نکردی.</p>`;
+  } else {
+    savedRecordings.forEach((rec) => {
+      const btn = document.createElement("button");
+      btn.className = "pickerRow";
+      btn.textContent = `${rec.name} (${rec.frames.length} فریم)`;
+      btn.onclick = () => {
+        playerCharacter.animations.push({ name: rec.name, frames: rec.frames });
+        $("animPickerOverlay").classList.add("hidden");
+        renderAnimChips();
+        selectAnim(playerCharacter.animations.length - 1);
+      };
+      list.appendChild(btn);
+    });
+  }
+  $("animPickerOverlay").classList.remove("hidden");
+};
+$("btnClosePicker").onclick = () => $("animPickerOverlay").classList.add("hidden");
+
+function animLoopStep() {
+  if (!animPlaying) return;
+  const anim = playerCharacter.animations[selectedAnimIdx];
+  if (!anim || !retargetFn) { stopAnim(); return; }
+  const frames = anim.frames;
+  drawPlayerFrame(retargetFn(frames[animFrameIdx].pts));
+  animFrameIdx++;
+  if (animFrameIdx >= frames.length) animFrameIdx = 0;
+  setTimeout(() => requestAnimationFrame(animLoopStep), 33);
+}
+
+function stopAnim() {
+  animPlaying = false;
+  $("btnPlayAnim").classList.remove("hidden");
+  $("btnStopAnim").classList.add("hidden");
+  if (selectedAnimIdx !== -1) {
+    animFrameIdx = 0;
+    const frames = playerCharacter.animations[selectedAnimIdx].frames;
+    if (retargetFn && frames.length) drawPlayerFrame(retargetFn(frames[0].pts));
+  }
+}
+
+$("btnPlayAnim").onclick = () => {
+  if (selectedAnimIdx === -1) return;
+  animPlaying = true;
+  animFrameIdx = 0;
+  $("btnPlayAnim").classList.add("hidden");
+  $("btnStopAnim").classList.remove("hidden");
+  animLoopStep();
+};
+$("btnStopAnim").onclick = () => stopAnim();
+
+updateSavedInfo();
+</script>
+</body>
+</html>
